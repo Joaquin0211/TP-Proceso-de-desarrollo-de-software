@@ -1,6 +1,6 @@
 # MissileCOOMand
 
 Integrantes:   
- ~ Tobias Ortiz Mejia  
+ ~  De Nicolas Santiago 
  ~ Joaquin Olmedo  
- ~ Lazaro Rivela  
+ ~  Denis Lautaro
