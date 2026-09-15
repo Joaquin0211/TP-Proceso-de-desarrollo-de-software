@@ -69,3 +69,17 @@ Con estos cambios, el proyecto cumple mejor los principios GRASP aplicables a es
 - menor acoplamiento y mayor cohesión entre clases
 
 La solución queda mejor estructurada, más mantenible y más fácil de extender en el futuro.
+
+## 7. Cambios realizados
+
+Se realizaron los siguientes cambios en el proyecto:
+
+- Se creó `GameFactory.java` para centralizar la creación de ciudades, misiles y explosiones.
+- Se creó `GameController.java` para controlar el estado del juego, los movimientos, las colisiones, el puntaje y la limpieza de objetos.
+- Se modificó `MissileComand.java` para delegar la lógica del juego a `GameController` y la creación de objetos a `GameFactory`.
+- Se modificó `GameObjectTarget.java` para concentrar la lógica común de los proyectiles: dirección, movimiento, distancia al objetivo y llegada al destino.
+- Se modificó `Misil.java` para utilizar la lógica de movimiento heredada de `GameObjectTarget`.
+- Se modificó `PlayerMisil.java` para reutilizar la misma lógica común y conservar su velocidad y dibujo específicos.
+- Se modificó `City.java` para que la ciudad determine si un misil la impactó mediante el método `isHitBy(...)`.
+
+Estos cambios no modifican el objetivo del juego. Reorganizan las responsabilidades para aplicar Creador, Controlador, Experto en Información, Bajo Acoplamiento y Alta Cohesión.
