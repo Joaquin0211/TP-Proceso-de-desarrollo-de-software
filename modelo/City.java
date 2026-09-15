@@ -68,6 +68,13 @@ public class City extends GameObjectStart implements IUpdatable{
             }
         }
     }
+
+    public boolean isHitBy(double projectileX, double projectileY, double radius) {
+        if (destroyed) {
+            return false;
+        }
+        return Math.hypot(projectileX - x, projectileY - y) < radius;
+    }
     
     private void playRandomExplosion() {
         if (soundPlayed) 

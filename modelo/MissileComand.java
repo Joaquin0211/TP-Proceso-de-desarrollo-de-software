@@ -11,10 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MissileComand extends JPanel implements ActionListener, MouseListener {
-    ArrayList<Misil> enemyMissiles;
-    ArrayList<PlayerMisil> counterMissiles;
-    ArrayList<City> cities;
-    ArrayList<Explosion> explosions;
+    private final List<City> cities;
+    private final GameController gameController;
 
     private int missileSpawnClock = 0;
     private int maxMisil;
@@ -35,19 +33,16 @@ public class MissileComand extends JPanel implements ActionListener, MouseListen
         setFocusable(true);
         addMouseListener(this);
 
-        enemyMissiles = new ArrayList<>();
-        counterMissiles = new ArrayList<>();
         cities = new ArrayList<>();
-        explosions = new ArrayList<>();
+        cities.add(GameFactory.createCity("San Francisco", 100, 520));
+        cities.add(GameFactory.createCity("Santa Bárbara", 250, 520));
+        cities.add(GameFactory.createCity("Los Angeles", 550, 520));
+        cities.add(GameFactory.createCity("San Diego", 700, 520));
 
         score = 0;
         misilCount = 0;
         maxMisil = 100;
-
-        cities.add(new City("San Francisco", 100, 520));
-        cities.add(new City("Santa Bárbara", 250, 520));
-        cities.add(new City("Los Ángeles", 550, 520));
-        cities.add(new City("San Diego", 700, 520));
+        gameController = new GameController(cities);
 
         lastTime = System.currentTimeMillis();
         timer = new Timer(16, this); // ~60 FPS
@@ -79,15 +74,15 @@ public class MissileComand extends JPanel implements ActionListener, MouseListen
         g2.setColor(Color.GREEN);
         g2.fillRect(baseX - 25, baseY, 50, 30);
 
-        for (PlayerMisil cm : counterMissiles) {
+        for (PlayerMisil cm : gameController.getPlayerMissiles()) {
             cm.draw(g2, baseX, baseY);
         }
 
-        for (Misil m : enemyMissiles) {
+        for (Misil m : gameController.getEnemyMissiles()) {
             m.draw(g2);
         }
 
-        for (Explosion ex : explosions) {
+        for (Explosion ex : gameController.getExplosions()) {
             ex.draw(g2);
         }
 
@@ -107,92 +102,38 @@ public class MissileComand extends JPanel implements ActionListener, MouseListen
         lastTime   = now;
         missileSpawnClock += delta;
 
-        // 1) Generar nuevos misiles enemigos
         if (missileSpawnClock > 1000 && misilCount < maxMisil) {
-            int startX = (int)(Math.random()*getWidth());
-            int targetX = (int)(Math.random()*getWidth());
-            enemyMissiles.add(new Misil(startX, 0, targetX, getHeight()));
+            int startX = (int)(Math.random() * getWidth());
+            int targetX = (int)(Math.random() * getWidth());
+            gameController.addEnemyMissile(startX, 0, targetX, getHeight());
             misilCount++;
             missileSpawnClock = 0;
         }
 
-        // 2) Mover todos los objetos
-        enemyMissiles .forEach(m -> m.update(delta));
-        counterMissiles.forEach(cm-> cm.update(delta));
-        explosions     .forEach(ex-> ex.update(delta));
-        cities         .forEach(c -> c.update(delta));
+        gameController.updateEnemyMissiles(delta);
+        gameController.updatePlayerMissiles(delta);
+        gameController.updateExplosions(delta);
+        gameController.updateCities(delta);
 
-        // 3) Detectar colisiones directo Misil vs PlayerMisil
-        List<Misil> emToRemove = new ArrayList<>();
-        List<PlayerMisil> pmToRemove = new ArrayList<>();
+        gameController.handlePlayerEnemyCollision();
+        gameController.handleTargetReachedPlayerShots();
+        gameController.handleBlastCollisions();
+        gameController.handleEnemyCityImpact();
+        gameController.cleanupFinishedObjects();
 
-        final double collisionThresh = 8;  // prueba distintos valores (6–12)
-        for (PlayerMisil pm : counterMissiles) {
-          for (Misil em : enemyMissiles) {
-            double dx = pm.getX() - em.getX();
-            double dy = pm.getY() - em.getY();
-            if (dx*dx + dy*dy <= COLLISION_RADIUS*COLLISION_RADIUS) {
-
-              // 3.1) Creá la explosión justo en la posición del misil enemigo
-              explosions.add(new Explosion((int)em.getX(), (int)em.getY()));
-              pmToRemove.add(pm);
-              emToRemove.add(em);
-              score += 10;
-            }
-          }
-        }
-     // Explosión automática al llegar al destino
-        List<PlayerMisil> toRemove = new ArrayList<>();
-        for (PlayerMisil pm : counterMissiles) {
-            if (pm.hasReachedTarget()) {
-                explosions.add(new Explosion(pm.getTargetX(), pm.getTargetY()));
-                toRemove.add(pm);
-            }
-        }
-        counterMissiles.removeAll(toRemove);
-        enemyMissiles.removeAll(emToRemove);
-
-        // 4) Colisión explosión vs misiles remanentes (ondas expansivas)
-        List<Misil> hitByBlast = new ArrayList<>();
-        for (Explosion ex : explosions) {
-          for (Misil em : enemyMissiles) {
-            if (ex.hits(em)) {
-              hitByBlast.add(em);
-              score += 10;
-            }
-          }
-        }
-        enemyMissiles.removeAll(hitByBlast);
-
-        // 5) Impacto de misiles sobre ciudades
-        for (Misil em : enemyMissiles) {
-          for (City city : cities) {
-            if (!city.isDestroyed() &&
-                Point.distance(em.getX(), em.getY(), city.getX(), city.getY()) < 25) {
-              city.takeDamage(100);
-              em.markForRemoval();  // marca el misil
-            }
-          }
-        }
-        enemyMissiles.removeIf(Misil::isMarkedForRemoval);
-
-        // 6) Limpiar objetos acabados
-        enemyMissiles.removeIf(Misil::hasReachedTarget);
-        counterMissiles.removeIf(PlayerMisil::hasReachedTarget);
-        explosions.removeIf(Explosion::isFinished);
-
+        score = gameController.getScore();
         repaint();
 
-        if (allCitiesDestroyed()) {
-          timer.stop();
-          showGameOverDialog();
+        if (gameController.allCitiesDestroyed()) {
+            timer.stop();
+            showGameOverDialog();
         }
     }
 
     public void mousePressed(MouseEvent e) {
         long now = System.currentTimeMillis();
         if (now - lastShotTime >= SHOT_COOLDOWN_MS) {
-            counterMissiles.add(new PlayerMisil(baseX, baseY, e.getX(), e.getY()));
+            gameController.addPlayerMissile(baseX, baseY, e.getX(), e.getY());
             lastShotTime = now;
 
             if (shootClip != null) {
@@ -207,24 +148,14 @@ public class MissileComand extends JPanel implements ActionListener, MouseListen
     }
 
     private boolean allCitiesDestroyed() {
-        for (City city : cities) {
-            if (!city.isDestroyed()) {
-                return false;
-            }
-        }
-        return true;
+        return gameController.allCitiesDestroyed();
     }
 
     private void resetGame() {
-        enemyMissiles.clear();
-        counterMissiles.clear();
-        explosions.clear();
+        gameController.reset(0);
         misilCount = 0;
         score = 0;
         missileSpawnClock = 0;
-        for (City city : cities) {
-            city.reset();
-        }
         timer.start();
     }
 
