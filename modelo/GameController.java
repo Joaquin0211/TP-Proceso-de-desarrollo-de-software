@@ -2,6 +2,7 @@ package modelo;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class GameController {
@@ -22,15 +23,15 @@ public class GameController {
     }
 
     public List<Misil> getEnemyMissiles() {
-        return enemyMissiles;
+        return Collections.unmodifiableList(enemyMissiles);
     }
 
     public List<PlayerMisil> getPlayerMissiles() {
-        return playerMissiles;
+        return Collections.unmodifiableList(playerMissiles);
     }
 
     public List<Explosion> getExplosions() {
-        return explosions;
+        return Collections.unmodifiableList(explosions);
     }
 
     public int getScore() {
@@ -104,7 +105,7 @@ public class GameController {
                     addExplosion(em.getX(), em.getY());
                     remPlayer.add(pm);
                     remEnemy.add(em);
-                    score += 10;
+                    addScore(10);
                 }
             }
         }
@@ -133,7 +134,7 @@ public class GameController {
             for (Misil em : enemyMissiles) {
                 if (ex.hits(em)) {
                     hitByBlast.add(em);
-                    score += 10;
+                    addScore(10);
                 }
             }
         }

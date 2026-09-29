@@ -23,7 +23,7 @@ public class PlayerMisil extends GameObjectTarget implements IUpdatable, IReachT
 
     public void draw(Graphics2D g2, int baseX, int baseY) {
         g2.setColor(Color.CYAN);
-        g2.drawLine(baseX, baseY, (int) x, (int) y);
+        g2.drawLine(baseX, baseY, getX(), getY());
     }
 
 }

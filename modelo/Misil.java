@@ -24,7 +24,7 @@ public class Misil extends GameObjectTarget implements IUpdatable, IReachTarget{
 
     public void draw(Graphics2D g2) {
         g2.setColor(Color.RED);
-        g2.fillOval((int)(x - 2), (int)(y - 2), 6, 6); // 6x6 círculo rojo
+        g2.fillOval(getX() - 2, getY() - 2, 6, 6); // 6x6 círculo rojo
     }
 
     // Método para marcarlo

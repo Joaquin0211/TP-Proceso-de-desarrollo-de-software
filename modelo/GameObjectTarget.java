@@ -1,9 +1,9 @@
 package modelo;
 
 public abstract class GameObjectTarget {
-	protected double x, y;
-	protected int targetX, targetY;
-	protected double dx, dy;
+	private double x, y;
+	private final int targetX, targetY;
+	private double dx, dy;
 
 	public GameObjectTarget(int x, int y, int targetX, int targetY) {
 		this.x = x;
