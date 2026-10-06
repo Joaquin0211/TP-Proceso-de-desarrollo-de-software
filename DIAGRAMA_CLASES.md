@@ -29,8 +29,8 @@ classDiagram
         <<abstract>>
         -x: double
         -y: double
-        -targetX: int
-        -targetY: int
+        -targetX: int {readOnly}
+        -targetY: int {readOnly}
         -dx: double
         -dy: double
         +GameObjectTarget(x: int, y: int, targetX: int, targetY: int)
@@ -52,6 +52,7 @@ classDiagram
         -explosionTimerMs: long
         -explosionClips: Clip[]
         -soundPlayed: boolean
+        -urlImagen: URL
         +City(name: String, x: int, y: int)
         +takeDamage(amount: int)
         +isHitBy(projectileX: double, projectileY: double, radius: double) boolean
@@ -93,6 +94,7 @@ classDiagram
     }
 
     class GameFactory {
+        <<utility>>
         +createCity(name: String, x: int, y: int) City
         +createEnemyMissile(x: int, y: int, targetX: int, targetY: int) Misil
         +createPlayerMissile(x: int, y: int, targetX: int, targetY: int) PlayerMisil
@@ -134,8 +136,14 @@ classDiagram
     class MissileComand {
         -cities: List~City~
         -gameController: GameController
+        -missileSpawnClock: int
+        -maxMisil: int
+        -misilCount: int
         -timer: Timer
         -score: int
+        -lastShotTime: long
+        -bgmClip: Clip
+        -shootClip: Clip
         +MissileComand()
         +paintComponent(graphics: Graphics)
         +actionPerformed(event: ActionEvent)
@@ -166,6 +174,7 @@ classDiagram
     }
 
     class ScoreManager {
+        <<utility>>
         -FILE_NAME: String
         +loadScores() List~ScoreEntry~
         +saveScores(scores: List~ScoreEntry~)
@@ -185,6 +194,8 @@ classDiagram
     GameFrame --> MissileComand : crea
     MainMenu --> GameFrame : inicia
     MainMenu --> ScoreManager : consulta
+    MissileComand ..> GameFactory : crea ciudades
+    MissileComand ..> ScoreManager : persiste puntajes
     MissileComand *-- GameController : utiliza
     MissileComand o-- City : muestra
     GameController o-- City : administra
@@ -210,4 +221,5 @@ classDiagram
 - `GameFactory` crea las entidades del juego y aplica el principio GRASP Creador.
 - `MissileComand` recibe eventos de Swing y delega la lógica a `GameController`.
 - `GameFrame` inicia la ventana del juego y `MainMenu` permite iniciar partidas o consultar puntajes.
+- `GameFactory` y `ScoreManager` son clases utilitarias con métodos estáticos; por eso el código depende directamente de implementaciones concretas para crear entidades y guardar puntajes.
 - `ScoreManager` gestiona los objetos `ScoreEntry` y la persistencia en `scores.txt`.
