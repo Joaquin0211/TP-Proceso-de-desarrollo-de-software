@@ -8,13 +8,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MissileComand extends JPanel implements ActionListener, MouseListener {
     ArrayList<Misil> enemyMissiles;
     ArrayList<PlayerMisil> counterMissiles;
     ArrayList<City> cities;
     ArrayList<Explosion> explosions;
+    private final Map<City, CityDamageAdapter> cityDamageAdapters = new HashMap<>();
 
     private int missileSpawnClock = 0;
     private int maxMisil;
@@ -44,10 +47,10 @@ public class MissileComand extends JPanel implements ActionListener, MouseListen
         misilCount = 0;
         maxMisil = 100;
 
-        cities.add(new City("San Francisco", 100, 520));
-        cities.add(new City("Santa Bárbara", 250, 520));
-        cities.add(new City("Los Ángeles", 550, 520));
-        cities.add(new City("San Diego", 700, 520));
+        addCity(new City("San Francisco", 100, 520));
+        addCity(new City("Santa Bárbara", 250, 520));
+        addCity(new City("Los Ángeles", 550, 520));
+        addCity(new City("San Diego", 700, 520));
 
         lastTime = System.currentTimeMillis();
         timer = new Timer(16, this); // ~60 FPS
@@ -169,7 +172,7 @@ public class MissileComand extends JPanel implements ActionListener, MouseListen
           for (City city : cities) {
             if (!city.isDestroyed() &&
                 Point.distance(em.getX(), em.getY(), city.getX(), city.getY()) < 25) {
-              city.takeDamage(100);
+              cityDamageAdapters.get(city).receiveDamage(100);
               em.markForRemoval();  // marca el misil
             }
           }
@@ -213,6 +216,11 @@ public class MissileComand extends JPanel implements ActionListener, MouseListen
             }
         }
         return true;
+    }
+
+    private void addCity(City city) {
+        cities.add(city);
+        cityDamageAdapters.put(city, new CityDamageAdapter(city));
     }
 
     private void resetGame() {
